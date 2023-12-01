@@ -13,9 +13,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.addEventListener('keydown', function (event) {
         if (event.keyCode === 13) {
+            event.preventDefault();
+
             if (event.metaKey || event.ctrlKey) {
                 // CMD + Enter for form submission
-                handleFormSubmission();
+                submitWebflowForm();
             } else {
                 // Enter key for progressing to the next form step
                 handleButtonClick({ target: { dataset: { 'wf-form-next-step': true } } });
@@ -24,6 +26,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (event.keyCode === 9) {
             handleTabKey(event);
+        }
+    });
+
+    document.addEventListener('keyup', function (event) {
+        // Check for CMD (Meta) key and Enter key (keyCode 13)
+        if ((event.metaKey || event.ctrlKey) && event.keyCode === 13) {
+            event.preventDefault();
+            submitWebflowForm();
         }
     });
 
@@ -62,12 +72,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function handleFormSubmission() {
-        if (validateStep(currentStep)) {
-            submitWebflowForm();
-        }
-    }
-
     function showStep(step) {
         var steps = document.querySelectorAll('[data-wf-form-step]');
         for (var i = 0; i < steps.length; i++) {
@@ -86,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var currentStepElement = document.querySelector('[data-wf-form-step="' + step + '"]');
         var requiredFields = currentStepElement.querySelectorAll('[data-wf-required]');
 
-        for (var i = 0; i < requiredFields.length; i++) {
+        for (var i = 0; requiredFields && i < requiredFields.length; i++) {
             var field = requiredFields[i];
 
             if (field.type === 'checkbox') {
