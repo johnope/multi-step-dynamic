@@ -13,18 +13,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.addEventListener('keydown', function (event) {
         if (event.keyCode === 13) {
-            handleEnterKey(event);
+            if (event.metaKey || event.ctrlKey) {
+                // CMD + Enter for form submission
+                handleFormSubmission();
+            } else {
+                // Enter key for progressing to the next form step
+                handleButtonClick({ target: { dataset: { 'wf-form-next-step': true } } });
+            }
         }
 
         if (event.keyCode === 9) {
             handleTabKey(event);
         }
     });
-
-    function handleEnterKey(event) {
-        event.preventDefault();
-        handleButtonClick(document.activeElement);
-    }
 
     function handleTabKey(event) {
         var focusedElement = document.activeElement;
@@ -57,6 +58,12 @@ document.addEventListener('DOMContentLoaded', function () {
             updateProgressBar(currentStep, totalSteps);
         } else if (btn.getAttribute('data-wf-form-submit')) {
             // You can add your form submission logic here
+            submitWebflowForm();
+        }
+    }
+
+    function handleFormSubmission() {
+        if (validateStep(currentStep)) {
             submitWebflowForm();
         }
     }
