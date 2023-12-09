@@ -12,15 +12,22 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.addEventListener('keydown', function (event) {
-        if (event.keyCode === 13) {
-            event.preventDefault();
+        // Get the active element
+        let activeElement = document.activeElement;
 
-            if (event.metaKey || event.ctrlKey) {
-                // CMD + Enter for form submission
+        // Check if the active element is a form input
+        if (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA') {
+            // CMD/CTRL + Enter to submit the form
+            if ((event.metaKey || event.ctrlKey) && event.keyCode === 13) {
+                event.preventDefault(); // Prevent default form submission
                 submitWebflowForm();
-            } else {
-                // Enter key for progressing to the next form step
-                handleButtonClick({ target: { dataset: { 'wf-form-next-step': true } } });
+            }
+            // Shift + Enter to go back to the previous step
+            else if (event.shiftKey && event.keyCode === 13) {
+                let prevButton = activeElement.closest('[data-wf-form-step]').querySelector('[data-wf-form-prev-step]');
+                if (prevButton) {
+                    prevButton.click();
+                }
             }
         }
 
@@ -36,6 +43,8 @@ document.addEventListener('DOMContentLoaded', function () {
             submitWebflowForm();
         }
     });
+
+    // Rest of your existing code...
 
     function handleTabKey(event) {
         var focusedElement = document.activeElement;
