@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     var currentStep = 1;
     var totalSteps = document.querySelectorAll('[data-wf-form-step]').length;
+    var answers = {};
 
     showStep(currentStep);
     updateProgressBar(currentStep, totalSteps);
@@ -12,18 +13,12 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.addEventListener('keydown', function (event) {
-        // Get the active element
         let activeElement = document.activeElement;
-
-        // Check if the active element is a form input
         if (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA') {
-            // CMD/CTRL + Enter to submit the form
             if ((event.metaKey || event.ctrlKey) && event.keyCode === 13) {
-                event.preventDefault(); // Prevent default form submission
+                event.preventDefault();
                 submitWebflowForm();
-            }
-            // Shift + Enter to go back to the previous step
-            else if (event.shiftKey && event.keyCode === 13) {
+            } else if (event.shiftKey && event.keyCode === 13) {
                 let prevButton = activeElement.closest('[data-wf-form-step]').querySelector('[data-wf-form-prev-step]');
                 if (prevButton) {
                     prevButton.click();
@@ -37,36 +32,25 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.addEventListener('keyup', function (event) {
-        // Check for CMD (Meta) key and Enter key (keyCode 13)
         if ((event.metaKey || event.ctrlKey) && event.keyCode === 13) {
             event.preventDefault();
             submitWebflowForm();
         }
     });
 
-    // Rest of your existing code...
-
-    function handleTabKey(event) {
-        var focusedElement = document.activeElement;
-
-        if (focusedElement.hasAttribute('data-wf-form-btn')) {
-            return; // Do nothing if the focused element is a form button
-        }
-
-        if (event.shiftKey) {
-            // If Shift + Tab is pressed, move to the previous form step
-            handleButtonClick({ target: { dataset: { 'wf-form-prev-step': true } } });
-        } else {
-            // If Tab is pressed, move to the next form step
-            handleButtonClick({ target: { dataset: { 'wf-form-next-step': true } } });
-        }
-    }
-
     function handleButtonClick(btn) {
+        var inputs = document.querySelectorAll('[data-wf-step="' + currentStep + '"] [data-wf-answer]');
+        inputs.forEach(saveAnswer);
+
         if (btn.getAttribute('data-wf-form-next-step')) {
             var nextStep = parseInt(btn.getAttribute('data-wf-form-next-step'));
             if (validateStep(currentStep)) {
-                currentStep = nextStep;
+                var branchStep = checkBranching(currentStep);
+                if (branchStep) {
+                    nextStep = branchStep;
+                } else if (!isNaN(nextStep)) {
+                    currentStep = nextStep;
+                }
                 showStep(currentStep);
                 updateProgressBar(currentStep, totalSteps);
             }
@@ -76,8 +60,14 @@ document.addEventListener('DOMContentLoaded', function () {
             showStep(currentStep);
             updateProgressBar(currentStep, totalSteps);
         } else if (btn.getAttribute('data-wf-form-submit')) {
-            // You can add your form submission logic here
             submitWebflowForm();
+        }
+    }
+
+    function saveAnswer(input) {
+        var answerId = input.getAttribute('data-wf-answer');
+        if (answerId) {
+            answers[answerId] = input.value;
         }
     }
 
@@ -89,55 +79,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
         steps[step - 1].style.display = 'block';
 
-        // Add quiz-specific logic here
         if (steps[step - 1].hasAttribute('data-wf-quiz')) {
-            setupQuiz(steps[step - 1], currentStep); // Pass the current quiz step to setupQuiz
+            setupQuiz(steps[step - 1], currentStep);
         }
+
+        showCustomMessage(step);
     }
 
-    function validateStep(step) {
-        var currentStepElement = document.querySelector('[data-wf-form-step="' + step + '"]');
-        var requiredFields = currentStepElement.querySelectorAll('[data-wf-required]');
-
-        for (var i = 0; requiredFields && i < requiredFields.length; i++) {
-            var field = requiredFields[i];
-
-            if (field.type === 'checkbox') {
-                if (!field.checked) {
-                    alert('Please check the required checkbox.');
-                    return false;
-                }
-            } else if (field.type === 'radio') {
-                var radioGroup = document.getElementsByName(field.name);
-                var radioChecked = false;
-
-                for (var j = 0; j < radioGroup.length; j++) {
-                    if (radioGroup[j].checked) {
-                        radioChecked = true;
-                        break;
-                    }
-                }
-
-                if (!radioChecked) {
-                    alert('Please select one of the radio options.');
-                    return false;
-                }
-            } else {
-                if (field.value.trim() === '') {
-                    alert('Please fill in all required fields.');
-                    return false;
-                }
-            }
+    function showCustomMessage(step) {
+        var messageElement = document.querySelector('[data-wf-form-step="' + step + '"] [data-wf-custom-message]');
+        if (messageElement) {
+            var message = 'Your custom message based on the answers: ' + JSON.stringify(answers);
+            messageElement.textContent = message;
         }
-
-        return true;
     }
 
     function submitWebflowForm() {
-        // Assuming the Webflow form has the attribute "data-wf-form-webflow"
         var webflowForm = document.querySelector('[data-wf-form-webflow]');
-
-        // Submit the Webflow form
         if (webflowForm) {
             webflowForm.submit();
         }
@@ -153,42 +111,40 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function setupQuiz(quizStep, currentStep) {
-        // Example: Customize quiz logic for the current quiz step
         var questionContainer = quizStep.querySelector('[data-wf-quiz-question-container]');
         var optionsContainer = quizStep.querySelector('[data-wf-quiz-options-container]');
         var feedbackMessage = quizStep.querySelector('[data-wf-quiz-feedback-message]');
 
-        // Hide all quiz elements by default
         questionContainer.style.display = 'none';
         optionsContainer.style.display = 'none';
         feedbackMessage.style.display = 'none';
 
-        // Show relevant elements based on the current step
         switch (currentStep) {
             case 1:
-                // Show question for step 1
                 questionContainer.style.display = 'block';
                 break;
             case 2:
-                // Show options for step 2
                 optionsContainer.style.display = 'block';
                 break;
             case 3:
-                // Show feedback message for step 3
                 feedbackMessage.style.display = 'block';
                 break;
-            // Add more cases as needed
             default:
-                // Handle cases not explicitly covered
                 break;
         }
 
-        // Additional common logic for all quiz steps
         commonQuizSetup();
     }
 
     function commonQuizSetup() {
-        // This function can be called within setupQuiz for common setup
-        // Add event listeners or additional logic here
+    }
+
+    function checkBranching(currentStep) {
+        if (currentStep === 1 && answers['question1'] === 'yes') {
+            return 3;
+        } else if (currentStep === 2 && answers['question2'] === 'no') {
+            return 5;
+        }
+        return null;
     }
 });
