@@ -24,6 +24,46 @@ document.addEventListener('DOMContentLoaded', function () {
       });
   }
 
+  // PayPal Payment handling
+  var paypalButtons = document.querySelectorAll('[data-wf-form-payment-paypal]');
+  paypalButtons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      handlePaypalPayment(btn);
+    });
+  });
+
+  function handlePaypalPayment(btn) {
+    var clientId = btn.getAttribute('data-wf-paypal-client-id');
+    var orderUrl = btn.getAttribute('data-wf-paypal-order-url');
+
+    // Set the client-id for PayPal SDK
+    paypal.Buttons({
+      env: 'production', // Or 'production'
+      client: {
+        sandbox: clientId,
+        production: clientId
+      },
+      createOrder: function () {
+        return fetch(orderUrl, {
+          method: 'POST'
+        }).then(function (res) {
+          return res.json();
+        }).then(function (data) {
+          return data.orderID;
+        });
+      },
+      onApprove: function (data) {
+        return fetch(orderUrl + '?orderID=' + data.orderID, {
+          method: 'PUT'
+        }).then(function (res) {
+          return res.json();
+        }).then(function (details) {
+          alert('Transaction completed by ' + details.payer.name.given_name);
+        });
+      }
+    }).render(btn);
+  }
+
   // Existing Webflow Form code
   var currentStep = 1;
   var totalSteps = document.querySelectorAll('[data-wf-form-step]').length;
