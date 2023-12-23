@@ -1,4 +1,30 @@
 document.addEventListener('DOMContentLoaded', function () {
+  // Existing Stripe Payment code
+  var stripeButtons = document.querySelectorAll('[data-wf-form-payment]');
+  stripeButtons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      handlePayment(btn);
+    });
+  });
+
+  function handlePayment(btn) {
+    var stripe = Stripe(btn.getAttribute('data-wf-stripe-key'));
+
+    fetch(btn.getAttribute('data-wf-stripe-session-url'), {
+      method: 'POST',
+    })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (session) {
+        return stripe.redirectToCheckout({ sessionId: session.id });
+      })
+      .catch(function (error) {
+        console.error('Error:', error);
+      });
+  }
+
+  // Existing Webflow Form code
   var currentStep = 1;
   var totalSteps = document.querySelectorAll('[data-wf-form-step]').length;
   var answers = {};
@@ -13,8 +39,14 @@ document.addEventListener('DOMContentLoaded', function () {
       handleButtonClick(event.target);
     } else if (event.target.hasAttribute('data-wf-form-reset')) {
       resetForm();
-    } else if (event.target.hasAttribute('data-wf-form-edit-step') || event.target.hasAttribute('data-wf-progress-indicator')) {
-      var step = parseInt(event.target.getAttribute('data-wf-form-edit-step') || event.target.getAttribute('data-wf-progress-indicator'));
+    } else if (
+      event.target.hasAttribute('data-wf-form-edit-step') ||
+      event.target.hasAttribute('data-wf-progress-indicator')
+    ) {
+      var step = parseInt(
+        event.target.getAttribute('data-wf-form-edit-step') ||
+          event.target.getAttribute('data-wf-progress-indicator')
+      );
       if (!isNaN(step)) {
         goToStep(step);
       }
@@ -29,7 +61,8 @@ document.addEventListener('DOMContentLoaded', function () {
         submitWebflowForm();
       } else if (event.shiftKey && event.keyCode === 13) {
         let prevButton = activeElement.closest('[data-wf-form-step]').querySelector(
-          '[data-wf-form-prev-step]');
+          '[data-wf-form-prev-step]'
+        );
         if (prevButton) {
           prevButton.click();
         }
@@ -83,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (answerId) {
       answers[answerId] = {
         value: input.value,
-        weight: isNaN(weight) ? 0 : weight
+        weight: isNaN(weight) ? 0 : weight,
       };
     }
   }
@@ -91,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function validateStep(step) {
     var isValid = true;
     var inputs = document.querySelectorAll('[data-wf-step="' + step + '"] [data-wf-answer]');
-    inputs.forEach(function(input) {
+    inputs.forEach(function (input) {
       var minLength = parseInt(input.getAttribute('data-wf-min-length'));
       if (!input.value) {
         isValid = false;
@@ -221,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function resetForm() {
     var inputs = document.querySelectorAll('[data-wf-answer]');
-    inputs.forEach(function(input) {
+    inputs.forEach(function (input) {
       input.value = '';
       hideErrorMessage(input);
     });
@@ -300,7 +333,7 @@ document.addEventListener('DOMContentLoaded', function () {
       case 'multiply':
         return value * operand;
       case 'divide':
-        return operand !== 0 ? value / operand : "Error: Division by zero";
+        return operand !== 0 ? value / operand : 'Error: Division by zero';
       default:
         return;
     }
@@ -314,7 +347,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (answerId) {
       answers[answerId] = {
         value: isNaN(result) ? input.value : result,
-        weight: isNaN(weight) ? 0 : weight
+        weight: isNaN(weight) ? 0 : weight,
       };
     }
   }
