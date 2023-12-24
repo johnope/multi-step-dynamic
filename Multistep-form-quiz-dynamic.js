@@ -1,123 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-  // Existing Stripe Payment code
-  var stripeButtons = document.querySelectorAll('[data-wf-form-payment]');
-  stripeButtons.forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      handlePayment(btn);
-    });
-  });
-
-  // PayPal Payment handling
-  var paypalButtons = document.querySelectorAll('[data-wf-form-payment-paypal]');
-  paypalButtons.forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      handlePaypalPayment(btn);
-    });
-  });
-
-  // Web3 Payment handling
-  var web3Buttons = document.querySelectorAll('[data-wf-form-payment-web3]');
-  web3Buttons.forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      handleWeb3Payment(btn);
-    });
-  });
-
-  function handlePayment(btn) {
-    var paymentMethod = btn.getAttribute('data-wf-form-payment-method');
-
-    if (paymentMethod === 'stripe') {
-      var stripe = Stripe(btn.getAttribute('data-wf-stripe-key'));
-
-      fetch(btn.getAttribute('data-wf-stripe-session-url'), {
-        method: 'POST',
-      })
-        .then(function (response) {
-          return response.json();
-        })
-        .then(function (session) {
-          return stripe.redirectToCheckout({ sessionId: session.id });
-        })
-        .catch(function (error) {
-          console.error('Error:', error);
-        });
-    } else if (paymentMethod === 'paypal') {
-      handlePaypalPayment(btn);
-    } else if (paymentMethod === 'web3') {
-      handleWeb3Payment(btn);
-    }
-  }
-
-  function handlePaypalPayment(btn) {
-    var clientId = btn.getAttribute('data-wf-paypal-client-id');
-    var orderUrl = btn.getAttribute('data-wf-paypal-order-url');
-
-    // Set the client-id for PayPal SDK
-    paypal.Buttons({
-      env: 'production', // Or 'production'
-      client: {
-        sandbox: clientId,
-        production: clientId,
-      },
-      createOrder: function () {
-        return fetch(orderUrl, {
-          method: 'POST',
-        })
-          .then(function (res) {
-            return res.json();
-          })
-          .then(function (data) {
-            return data.orderID;
-          });
-      },
-      onApprove: function (data) {
-        return fetch(orderUrl + '?orderID=' + data.orderID, {
-          method: 'PUT',
-        })
-          .then(function (res) {
-            return res.json();
-          })
-          .then(function (details) {
-            alert('Transaction completed by ' + details.payer.name.given_name);
-          });
-      },
-    }).render(btn);
-  }
-
-  function handleWeb3Payment(btn) {
-    var provider = btn.getAttribute('data-wf-web3-provider');
-    var toAddress = btn.getAttribute('data-wf-web3-to-address');
-    var amount = btn.getAttribute('data-wf-web3-amount');
-
-    // Check if Web3 is injected
-    if (typeof window.ethereum !== 'undefined' || typeof window.web3 !== 'undefined') {
-      // Web3 browser user detected. You can now use the provider.
-      var provider = window['ethereum'] || window.web3.currentProvider;
-      var web3 = new Web3(provider);
-
-      web3.eth.sendTransaction(
-        {
-          from: web3.eth.defaultAccount,
-          to: toAddress,
-          value: web3.utils.toWei(amount, 'ether'),
-        },
-        function (error, transactionHash) {
-          if (error) {
-            console.error('Error:', error);
-          } else {
-            console.log('Transaction Hash:', transactionHash);
-          }
-        }
-      );
-    } else {
-      console.log('Non-Ethereum browser detected. You should consider trying MetaMask!');
-    }
-  }
-
-  // ... rest of your existing code ...
-
-  // Your existing code...
-
   var currentStep = 1;
   var totalSteps = document.querySelectorAll('[data-wf-form-step]').length;
   var answers = {};
@@ -132,14 +13,10 @@ document.addEventListener('DOMContentLoaded', function () {
       handleButtonClick(event.target);
     } else if (event.target.hasAttribute('data-wf-form-reset')) {
       resetForm();
-    } else if (
-      event.target.hasAttribute('data-wf-form-edit-step') ||
-      event.target.hasAttribute('data-wf-progress-indicator')
-    ) {
-      var step = parseInt(
-        event.target.getAttribute('data-wf-form-edit-step') ||
-          event.target.getAttribute('data-wf-progress-indicator')
-      );
+    } else if (event.target.hasAttribute('data-wf-form-edit-step') || event.target
+      .hasAttribute('data-wf-progress-indicator')) {
+      var step = parseInt(event.target.getAttribute('data-wf-form-edit-step') || event
+        .target.getAttribute('data-wf-progress-indicator'));
       if (!isNaN(step)) {
         goToStep(step);
       }
@@ -154,8 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
         submitWebflowForm();
       } else if (event.shiftKey && event.keyCode === 13) {
         let prevButton = activeElement.closest('[data-wf-form-step]').querySelector(
-          '[data-wf-form-prev-step]'
-        );
+          '[data-wf-form-prev-step]');
         if (prevButton) {
           prevButton.click();
         }
@@ -175,7 +51,8 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   function handleButtonClick(btn) {
-    var inputs = document.querySelectorAll('[data-wf-step="' + currentStep + '"] [data-wf-answer]');
+    var inputs = document.querySelectorAll('[data-wf-step="' + currentStep +
+      '"] [data-wf-answer]');
     inputs.forEach(saveAnswer);
 
     if (btn.getAttribute('data-wf-form-add-field')) {
@@ -209,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (answerId) {
       answers[answerId] = {
         value: input.value,
-        weight: isNaN(weight) ? 0 : weight,
+        weight: isNaN(weight) ? 0 : weight
       };
     }
   }
@@ -224,7 +101,8 @@ document.addEventListener('DOMContentLoaded', function () {
         showErrorMessage(input, 'This field is required.');
       } else if (isNaN(minLength) === false && input.value.length < minLength) {
         isValid = false;
-        showErrorMessage(input, 'This field requires at least ' + minLength + ' characters.');
+        showErrorMessage(input, 'This field requires at least ' + minLength +
+          ' characters.');
       } else {
         hideErrorMessage(input);
       }
@@ -299,17 +177,17 @@ document.addEventListener('DOMContentLoaded', function () {
     feedbackMessage.style.display = 'none';
 
     switch (currentStep) {
-      case 1:
-        questionContainer.style.display = 'block';
-        break;
-      case 2:
-        optionsContainer.style.display = 'block';
-        break;
-      case 3:
-        feedbackMessage.style.display = 'block';
-        break;
-      default:
-        break;
+    case 1:
+      questionContainer.style.display = 'block';
+      break;
+    case 2:
+      optionsContainer.style.display = 'block';
+      break;
+    case 3:
+      feedbackMessage.style.display = 'block';
+      break;
+    default:
+      break;
     }
 
     commonQuizSetup();
@@ -405,57 +283,60 @@ document.addEventListener('DOMContentLoaded', function () {
     return score;
   }
 
-  function calculate(input) {
-    var operation = input.getAttribute('data-wf-calc-operation');
-    var value = parseFloat(input.value);
+  // Check if Web3 has been injected by the browser:
+  if (typeof web3 !== 'undefined') {
+    // If a web3 instance is already provided by Meta Mask.
+    web3 = new Web3(web3.currentProvider);
+  } else {
+    // Specify default instance if no web3 instance provided
+    web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+  }
 
-    // Extract the operand from the input value
-    var operand = value % 10; // This will get the last digit of the input value
-
-    if (isNaN(value)) {
+  // Get accounts.
+  web3.eth.getAccounts(function (err, accounts) {
+    if (err != null) {
+      alert("There was an error fetching your accounts.");
       return;
     }
 
-    switch (operation) {
-      case 'add':
-        return value + operand;
-      case 'subtract':
-        return value - operand;
-      case 'multiply':
-        return value * operand;
-      case 'divide':
-        return operand !== 0 ? value / operand : 'Error: Division by zero';
-      default:
-        return;
+    if (accounts.length == 0) {
+      alert(
+        "Couldn't get any accounts! Make sure your Ethereum client is configured correctly."
+      );
+      return;
     }
-  }
 
-  function saveAnswer(input) {
-    var answerId = input.getAttribute('data-wf-answer');
-    var weight = parseInt(input.getAttribute('data-wf-weight'));
-    var result = calculate(input);
+    // Set the first account as the default account.
+    web3.eth.defaultAccount = accounts[0];
+  });
 
-    if (answerId) {
-      answers[answerId] = {
-        value: isNaN(result) ? input.value : result,
-        weight: isNaN(weight) ? 0 : weight,
-      };
-    }
-  }
-
-  function displayCalculationResult() {
-    var resultElement = document.querySelector('[data-wf-calc-result]');
-    if (resultElement) {
-      var result = 0;
-      for (var answerId in answers) {
-        var value = parseFloat(answers[answerId].value);
-        if (!isNaN(value)) {
-          result += value;
-        }
+  // Set up a payment function.
+  function makePayment(amount, receiver) {
+    web3.eth.sendTransaction({
+      from: web3.eth.defaultAccount,
+      to: receiver,
+      value: web3.utils.toWei(amount, "ether")
+    }, function (err, transactionHash) {
+      if (err) {
+        console.log('Payment failed', err);
+      } else {
+        console.log('Payment successful', transactionHash);
       }
-      resultElement.textContent = result;
-    }
+    });
   }
 
-  // Your existing code...
+  function submitWebflowForm() {
+    var webflowForm = document.querySelector('[data-wf-form-webflow]');
+    if (webflowForm) {
+      // Get the payment amount and receiver from the form.
+      var amount = webflowForm.querySelector('[data-wf-payment-amount]').value;
+      var receiver = webflowForm.querySelector('[data-wf-payment-receiver]').value;
+
+      // Make a payment.
+      makePayment(amount, receiver);
+
+      // Submit the form.
+      webflowForm.submit();
+    }
+  }
 });
