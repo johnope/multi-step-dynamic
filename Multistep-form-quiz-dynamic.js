@@ -304,7 +304,8 @@ document.addEventListener('DOMContentLoaded', function () {
       // Iterate through answers and display them
       for (var answerId in answers) {
         var inputValue = answers[answerId].value;
-        var inputLabel = document.querySelector('[data-wf-answer="' + answerId + '"]').getAttribute('data-wf-label');
+        var inputLabel = document.querySelector('[data-wf-answer="' + answerId + '"]')
+          .getAttribute('data-wf-label');
         var inputDisplay = document.createElement('div');
         inputDisplay.textContent = inputLabel + ': ' + inputValue;
         displayElement.appendChild(inputDisplay);
