@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
   var currentStep = 1;
   var totalSteps = document.querySelectorAll('[data-wf-form-step]').length;
-  var answers = {};
+  var answers = getStoredAnswers();
   var stepsCompleted = [];
 
   showStep(currentStep);
@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', function () {
     } else if (event.target.hasAttribute('data-wf-form-prev-step')) {
       goToPreviousStep();
     }
+
+    displayUserInput();
+    saveAnswersToStorage();
   });
 
   document.addEventListener('keydown', function (event) {
@@ -80,9 +83,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       }
     }
-
-    // Call the displayUserInput function to update the displayed input data
-    displayUserInput();
   }
 
   function saveAnswer(input) {
@@ -159,14 +159,11 @@ document.addEventListener('DOMContentLoaded', function () {
   function submitWebflowForm() {
     var webflowForm = document.querySelector('[data-wf-form-webflow]');
     if (webflowForm) {
-      // Get the payment amount and receiver from the form.
       var amount = webflowForm.querySelector('[data-wf-payment-amount]').value;
       var receiver = webflowForm.querySelector('[data-wf-payment-receiver]').value;
 
-      // Make a payment.
       makePayment(amount, receiver);
 
-      // Submit the form.
       webflowForm.submit();
     }
   }
@@ -190,30 +187,27 @@ document.addEventListener('DOMContentLoaded', function () {
     feedbackMessage.style.display = 'none';
 
     switch (currentStep) {
-    case 1:
-      questionContainer.style.display = 'block';
-      break;
-    case 2:
-      optionsContainer.style.display = 'block';
-      break;
-    case 3:
-      feedbackMessage.style.display = 'block';
-      break;
-    default:
-      break;
+      case 1:
+        questionContainer.style.display = 'block';
+        break;
+      case 2:
+        optionsContainer.style.display = 'block';
+        break;
+      case 3:
+        feedbackMessage.style.display = 'block';
+        break;
+      default:
+        break;
     }
 
     commonQuizSetup();
   }
 
   function commonQuizSetup() {
-    // Add branching logic based on user answers
     if (currentStep === 2) {
       var answerToQuestion1 = answers['question1'];
 
-      // Example branching logic
       if (answerToQuestion1 === 'optionA') {
-        // Go to a different question or answer based on the selected option
         var nextQuestion = document.querySelector('[data-wf-quiz-next-question-optionA]');
         if (nextQuestion) {
           currentStep = parseInt(nextQuestion.getAttribute('data-wf-form-next-step'));
@@ -222,7 +216,6 @@ document.addEventListener('DOMContentLoaded', function () {
           return;
         }
       } else if (answerToQuestion1 === 'optionB') {
-        // Go to a different question or answer based on the selected option
         var nextQuestion = document.querySelector('[data-wf-quiz-next-question-optionB]');
         if (nextQuestion) {
           currentStep = parseInt(nextQuestion.getAttribute('data-wf-form-next-step'));
@@ -263,6 +256,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function resetForm() {
+    localStorage.removeItem('formAnswers');
     var inputs = document.querySelectorAll('[data-wf-answer]');
     inputs.forEach(function (input) {
       input.value = '';
@@ -298,10 +292,8 @@ document.addEventListener('DOMContentLoaded', function () {
   function displayUserInput() {
     var displayElement = document.querySelector('[data-wf-display-input]');
     if (displayElement) {
-      // Clear previous content
       displayElement.innerHTML = '';
 
-      // Iterate through answers and display them
       for (var answerId in answers) {
         var inputValue = answers[answerId].value;
         var inputLabel = document.querySelector('[data-wf-answer="' + answerId + '"]')
@@ -313,16 +305,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Check if Web3 has been injected by the browser:
   if (typeof web3 !== 'undefined') {
-    // If a web3 instance is already provided by Meta Mask.
     web3 = new Web3(web3.currentProvider);
   } else {
-    // Specify default instance if no web3 instance provided
     web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
   }
 
-  // Get accounts.
   web3.eth.getAccounts(function (err, accounts) {
     if (err != null) {
       alert("There was an error fetching your accounts.");
@@ -336,11 +324,9 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    // Set the first account as the default account.
     web3.eth.defaultAccount = accounts[0];
   });
 
-  // Set up a payment function.
   function makePayment(amount, receiver) {
     web3.eth.sendTransaction({
       from: web3.eth.defaultAccount,
