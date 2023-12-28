@@ -203,7 +203,33 @@ document.addEventListener('DOMContentLoaded', function () {
     commonQuizSetup();
   }
 
-  function commonQuizSetup() {}
+  function commonQuizSetup() {
+    // Add branching logic based on user answers
+    if (currentStep === 2) {
+      var answerToQuestion1 = answers['question1'];
+
+      // Example branching logic
+      if (answerToQuestion1 === 'optionA') {
+        // Go to a different question or answer based on the selected option
+        var nextQuestion = document.querySelector('[data-wf-quiz-next-question-optionA]');
+        if (nextQuestion) {
+          currentStep = parseInt(nextQuestion.getAttribute('data-wf-form-next-step'));
+          showStep(currentStep);
+          updateProgressBar(currentStep, totalSteps);
+          return;
+        }
+      } else if (answerToQuestion1 === 'optionB') {
+        // Go to a different question or answer based on the selected option
+        var nextQuestion = document.querySelector('[data-wf-quiz-next-question-optionB]');
+        if (nextQuestion) {
+          currentStep = parseInt(nextQuestion.getAttribute('data-wf-form-next-step'));
+          showStep(currentStep);
+          updateProgressBar(currentStep, totalSteps);
+          return;
+        }
+      }
+    }
+  }
 
   function checkBranching(currentStep) {
     if (currentStep === 1 && answers['question1'] === 'yes') {
