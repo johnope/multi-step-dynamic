@@ -187,17 +187,17 @@ document.addEventListener('DOMContentLoaded', function () {
     feedbackMessage.style.display = 'none';
 
     switch (currentStep) {
-      case 1:
-        questionContainer.style.display = 'block';
-        break;
-      case 2:
-        optionsContainer.style.display = 'block';
-        break;
-      case 3:
-        feedbackMessage.style.display = 'block';
-        break;
-      default:
-        break;
+    case 1:
+      questionContainer.style.display = 'block';
+      break;
+    case 2:
+      optionsContainer.style.display = 'block';
+      break;
+    case 3:
+      feedbackMessage.style.display = 'block';
+      break;
+    default:
+      break;
     }
 
     commonQuizSetup();
