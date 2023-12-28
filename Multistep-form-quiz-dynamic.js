@@ -20,6 +20,8 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!isNaN(step)) {
         goToStep(step);
       }
+    } else if (event.target.hasAttribute('data-wf-form-prev-step')) {
+      goToPreviousStep();
     }
   });
 
@@ -154,6 +156,14 @@ document.addEventListener('DOMContentLoaded', function () {
   function submitWebflowForm() {
     var webflowForm = document.querySelector('[data-wf-form-webflow]');
     if (webflowForm) {
+      // Get the payment amount and receiver from the form.
+      var amount = webflowForm.querySelector('[data-wf-payment-amount]').value;
+      var receiver = webflowForm.querySelector('[data-wf-payment-receiver]').value;
+
+      // Make a payment.
+      makePayment(amount, receiver);
+
+      // Submit the form.
       webflowForm.submit();
     }
   }
@@ -177,17 +187,17 @@ document.addEventListener('DOMContentLoaded', function () {
     feedbackMessage.style.display = 'none';
 
     switch (currentStep) {
-    case 1:
-      questionContainer.style.display = 'block';
-      break;
-    case 2:
-      optionsContainer.style.display = 'block';
-      break;
-    case 3:
-      feedbackMessage.style.display = 'block';
-      break;
-    default:
-      break;
+      case 1:
+        questionContainer.style.display = 'block';
+        break;
+      case 2:
+        optionsContainer.style.display = 'block';
+        break;
+      case 3:
+        feedbackMessage.style.display = 'block';
+        break;
+      default:
+        break;
     }
 
     commonQuizSetup();
@@ -248,39 +258,12 @@ document.addEventListener('DOMContentLoaded', function () {
     updateProgressBar(currentStep, totalSteps);
   }
 
-  function getSuccessMessageAndRedirect() {
-    var successMessage = '';
-    var redirectUrl = '';
-
-    // Get the elements that have the 'data-wf-branch' attribute
-    var branches = document.querySelectorAll('[data-wf-branch]');
-
-    // Iterate over the branches
-    for (var i = 0; i < branches.length; i++) {
-      var branch = branches[i];
-
-      // Get the condition, success message, and redirect URL from the Webflow attributes
-      var condition = branch.getAttribute('data-wf-branch-condition');
-      var message = branch.getAttribute('data-wf-branch-message');
-      var url = branch.getAttribute('data-wf-branch-url');
-
-      // Evaluate the condition
-      if (eval(condition)) {
-        successMessage = message;
-        redirectUrl = url;
-        break;
-      }
+  function goToPreviousStep() {
+    if (currentStep > 1) {
+      currentStep--;
+      showStep(currentStep);
+      updateProgressBar(currentStep, totalSteps);
     }
-
-    return { successMessage, redirectUrl };
-  }
-
-  function getWeightedScore() {
-    var score = 0;
-    for (var answerId in answers) {
-      score += answers[answerId].weight;
-    }
-    return score;
   }
 
   // Check if Web3 has been injected by the browser:
@@ -323,20 +306,5 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('Payment successful', transactionHash);
       }
     });
-  }
-
-  function submitWebflowForm() {
-    var webflowForm = document.querySelector('[data-wf-form-webflow]');
-    if (webflowForm) {
-      // Get the payment amount and receiver from the form.
-      var amount = webflowForm.querySelector('[data-wf-payment-amount]').value;
-      var receiver = webflowForm.querySelector('[data-wf-payment-receiver]').value;
-
-      // Make a payment.
-      makePayment(amount, receiver);
-
-      // Submit the form.
-      webflowForm.submit();
-    }
   }
 });
