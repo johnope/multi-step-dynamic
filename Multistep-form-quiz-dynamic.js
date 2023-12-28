@@ -80,6 +80,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       }
     }
+
+    // Call the displayUserInput function to update the displayed input data
+    displayUserInput();
   }
 
   function saveAnswer(input) {
@@ -289,6 +292,23 @@ document.addEventListener('DOMContentLoaded', function () {
       currentStep--;
       showStep(currentStep);
       updateProgressBar(currentStep, totalSteps);
+    }
+  }
+
+  function displayUserInput() {
+    var displayElement = document.querySelector('[data-wf-display-input]');
+    if (displayElement) {
+      // Clear previous content
+      displayElement.innerHTML = '';
+
+      // Iterate through answers and display them
+      for (var answerId in answers) {
+        var inputValue = answers[answerId].value;
+        var inputLabel = document.querySelector('[data-wf-answer="' + answerId + '"]').getAttribute('data-wf-label');
+        var inputDisplay = document.createElement('div');
+        inputDisplay.textContent = inputLabel + ': ' + inputValue;
+        displayElement.appendChild(inputDisplay);
+      }
     }
   }
 
